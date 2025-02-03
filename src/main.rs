@@ -13,6 +13,7 @@ use {
 };
 
 mod miner;
+mod schema;
 mod miner_controller;
 mod util;
 mod wallet;
@@ -31,8 +32,15 @@ async fn main() -> io::Result<()> {
     env::set_var("RUST_LOG", "activx_web=debug,actix_server=info");
     env_logger::init();
 
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL not detected.");
+    let manager = ConnectionManager::<PgConnection>::new(database_url);
+    let pool = r2d2::Pool::builder()
+        .build(manager)
+        .expect("Failed to initialize DB connection pool.");
+
     HttpServer::new(|| {
         App::new()
+        .data(pool.clone())
         .wrap(middleware::Logger::default())
         .service(wallet_controller::list_wallets)
         .service(wallet_controller::get_wallet)
