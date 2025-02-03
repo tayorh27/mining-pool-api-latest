@@ -1,5 +1,15 @@
 use {
+    diesel:: {ExpressionMethods, Insertable, Queryable, RunQueryDsl},
+    diesel::query_dsl::methods::FilterDsl,
+    diesel::result::Error,
+    rand::Rng,
     serde::{Deserialize, Serialize},
+    uuid::Uuid,
+
+    super::schema::miners,
+
+    crate::DBPooledConnection,
+    crate::wallet::fetch_wallet_by_id
 };
 
 // --------------------- JSON Payload (REST)
@@ -25,6 +35,8 @@ pub struct NewMinerRequest {
 
 // --------------------- DAO Object (DB Table Records)
 
+#[derive(Queryable, Insertable)]
+#[table_name = "miners"]
 pub struct MinerDAO {
     pub id: String,
     pub address: String,

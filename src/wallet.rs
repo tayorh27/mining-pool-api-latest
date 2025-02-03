@@ -1,5 +1,15 @@
 use {
+    diesel:: {ExpressionMethods, Insertable, Queryable, RunQueryDsl},
+    diesel::query_dsl::methods::FilterDsl,
+    diesel::result::Error,
+    rand::Rng,
     serde::{Deserialize, Serialize},
+    uuid::Uuid,
+
+    super::schema::wallets,
+
+    crate::DBPooledConnection,
+    crate::miner::{Miner, MinerDAO}
 };
 
 // --------------------- JSON Payload (REST)
@@ -14,6 +24,15 @@ pub struct Wallet {
     pub workers_online: Vec<Miner>,
 }
 
+impl Wallet {
+    pub fn to_wallet_dao(&self) -> WalletDAO {
+        WalletDAO { 
+            address: Uuid::parse_str(self.address.as_str()).unwrap(), 
+            club_name: self.club_name.to_string() 
+        }
+    }
+}
+
 // --------------------- POST Request Body for new Miner
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -24,7 +43,9 @@ pub struct NewWalletRequest {
 
 // --------------------- DAO Object (DB Table Records)
 
+#[derive(Queryable, Insertable)]
+#[table_name = "wallets"]
 pub struct WalletDAO {
-    pub address: String,
+    pub address: Uuid,
     pub club_name: String,
 }
